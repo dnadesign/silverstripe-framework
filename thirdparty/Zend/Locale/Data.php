@@ -950,7 +950,10 @@ class Zend_Locale_Data
         $val = urlencode($val);
         $id = strtr('Zend_LocaleC_' . $locale . '_' . $path . '_' . $val, array('-' => '_', '%' => '_', '+' => '_'));
         if (!self::$_cacheDisabled && ($result = self::$_cache->load($id))) {
-            return unserialize($result);
+            $unserializedResult = unserialize($result);
+            if ($unserializedResult) {
+                return $unserializedResult;
+            }
         }
 
         switch(strtolower($path)) {
