@@ -823,7 +823,7 @@ jQuery.noConflict();
 						tabset = $(this), 
 						tabsetId = tabset.attr('id'), 
 						tab,
-						forcedTab = tabset.find('li.ss-tabs-force-active');
+						forcedTab = tabset.children('ul').children('li.ss-tabs-force-active');
 
 					if(!tabset.data('tabs')) return; // don't act on uninit'ed controls
 
@@ -833,12 +833,6 @@ jQuery.noConflict();
 					// Make sure the intended tab is selected. Only force the tab on the correct tabset though
 					if(forcedTab.length) {
 						index = forcedTab.first().index();
-
-						if(sessionStates) {
-							if(sessionStates[0].id !== tabsetId) {
-								index = null;
-							}
-						}
 					} else if(overrideStates && overrideStates[tabsetId]) {
 						tab = tabset.find(overrideStates[tabsetId].tabSelector);
 					
