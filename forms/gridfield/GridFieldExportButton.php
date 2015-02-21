@@ -135,13 +135,13 @@ class GridFieldExportButton implements GridField_HTMLProvider, GridField_ActionP
 			if(!$item->hasMethod('canView') || $item->canView()) {
 				$columnData = array();
 
-				foreach($csvColumns as $columnSource => $columnHeader) {
-					if(!is_string($columnHeader) && is_callable($columnHeader)) {
-						if($item->hasMethod($columnSource)) {
-							$relObj = $item->{$columnSource}();
-						} else {
-							$relObj = $item->relObject($columnSource);
-						}
+			foreach($csvColumns as $columnSource => $columnHeader) {
+				if(!is_string($columnHeader) && is_callable($columnHeader)) {
+					if($item->hasMethod($columnSource)) {
+						$relObj = $item->{$columnSource}();
+					} else {
+						$relObj = $item->relObject($columnSource);
+					}
 
 						$value = $columnHeader($relObj);
 					} else {
