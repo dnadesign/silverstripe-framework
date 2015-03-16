@@ -639,8 +639,8 @@ class Hierarchy extends DataExtension {
 		} else {
 			$staged = $baseClass::get()
 				->filter('ParentID', (int)$this->owner->ID)
-				->exclude('ID', (int)$this->owner->ID)
-				->filter('ClassName:not', $hidden);
+				->exclude('ClassName', $hidden)
+				->exclude('ID', (int)$this->owner->ID);
 		}
 
 		if (!$showAll && $this->owner->db('ShowInMenus')) {
@@ -676,8 +676,8 @@ class Hierarchy extends DataExtension {
 		} else {
 			$children = $baseClass::get()
 				->filter('ParentID', (int)$this->owner->ID)
+				->exclude('ClassName', $hidden)
 				->exclude('ID', (int)$this->owner->ID)
-				->filter('ClassName:not', $hidden)
 				->setDataQueryParam(array(
 					'Versioned.mode' => $onlyDeletedFromStage ? 'stage_unique' : 'stage',
 					'Versioned.stage' => 'Live'
