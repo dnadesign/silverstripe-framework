@@ -1424,7 +1424,8 @@ class DataObject extends ViewableData implements DataObjectInterface, i18nEntity
 			$joinID    = $this->getField($joinField);
 
 			if(isset(DataObject::$_cache_has_one[$class][$joinID])) {
-				return DataObject::$_cache_has_one[$class][$joinID];
+				$this->components[$componentName] = DataObject::$_cache_has_one[$class][$joinID];
+				return $this->components[$componentName];
 			}
 
 			if($joinID) {
