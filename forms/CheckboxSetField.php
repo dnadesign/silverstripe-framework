@@ -72,9 +72,12 @@ class CheckboxSetField extends OptionsetField {
 		// Get values from the join, if available
 		if(is_object($this->form)) {
 			$record = $this->form->getRecord();
-			if(!$values && $record && $record->hasMethod($this->name)) {
+
+			if((!$values || !$values->exists()) && $record && $record->hasMethod($this->name)) {
 				$funcName = $this->name;
 				$join = $record->$funcName();
+				$values = array();
+
 				if($join) {
 					foreach($join as $joinItem) {
 						$values[] = $joinItem->ID;
@@ -91,6 +94,7 @@ class CheckboxSetField extends OptionsetField {
 				// Source and values are DataObject sets.
 				if($values && is_a($values, 'SS_List')) {
 					foreach($values as $object) {
+
 						if(is_a($object, 'DataObject')) {
 							$items[] = $object->ID;
 						}
