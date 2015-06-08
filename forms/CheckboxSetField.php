@@ -74,14 +74,17 @@ class CheckboxSetField extends OptionsetField {
 			$record = $this->form->getRecord();
 
 
-			if((!$values || (is_object($values) && !$values->exists() && !$values->exists()) && $record && $record->hasMethod($this->name))) {
-				$funcName = $this->name;
-				$join = $record->$funcName();
+			if(!$values || (is_object($values) && !$values->exists())) {
 				$values = array();
+				if($record && $record->hasMethod($this->name)) {
+					$funcName = $this->name;
+					$join = $record->$funcName();
+					
 
-				if($join) {
-					foreach($join as $joinItem) {
-						$values[] = $joinItem->ID;
+					if($join) {
+						foreach($join as $joinItem) {
+							$values[] = $joinItem->ID;
+						}
 					}
 				}
 			}
