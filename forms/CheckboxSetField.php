@@ -73,7 +73,8 @@ class CheckboxSetField extends OptionsetField {
 		if(is_object($this->form)) {
 			$record = $this->form->getRecord();
 
-			if((!$values || !$values->exists()) && $record && $record->hasMethod($this->name)) {
+
+			if((!$values || (is_object($values) && !$values->exists() && !$values->exists()) && $record && $record->hasMethod($this->name))) {
 				$funcName = $this->name;
 				$join = $record->$funcName();
 				$values = array();
@@ -85,6 +86,7 @@ class CheckboxSetField extends OptionsetField {
 				}
 			}
 		}
+
 		
 		// Source is not an array
 		if(!is_array($source) && !is_a($source, 'SQLMap')) {
