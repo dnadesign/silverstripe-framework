@@ -117,7 +117,7 @@ abstract class BulkLoader extends ViewableData {
 	 * @var array
 	 */
 	public $duplicateChecks = array();
-	
+
 	/**
 	 * @var Boolean $clearBeforeImport Delete ALL records before importing.
 	 */
@@ -138,10 +138,49 @@ abstract class BulkLoader extends ViewableData {
 		increase_time_limit_to(3600);
 		increase_memory_limit_to('512M');
 		
-		//get all instances of the to be imported data object 
-		if($this->deleteExistingRecords) { 
-			DataObject::get($this->objectClass)->removeAll();
-		} 
+		// get all instances of the to be imported data object
+		if($this->deleteExistingRecords) {
+			$instance = singleton($this->objectClass);
+			$items = DataObject::get($this->objectClass);
+
+			if($instance->hasExtension('Versioned')) {
+				$items = $items->setDataQueryParam(array(
+					'Versioned.mode' => 'stage',
+					'Versioned.stage' => $instance->getDefaultStage()
+				));
+			}
+
+			foreach($items as $item) {
+				if($item->canDelete()) {
+					if($item->hasExtension('Versioned')) {
+						foreach($item->getVersionedStages() as $stage) {
+							$item->deleteFromStage($stage);
+						}
+					}
+
+					$item->delete();
+				}
+
+				$item->flushCache();
+				$item->destroy();
+
+				unset($item);
+			}
+
+			// clean up anything that has been deleted on draft but not on live
+			foreach($instance->getVersionedStages() as $stage) {
+				if($stage !== $instance->getDefaultStage()) {
+					$orphaned = DataObject::get($this->objectClass)->setDataQueryParam(array(
+						'Versioned.mode' => 'stage',
+						'Versioned.stage' => $stage
+					));
+
+					foreach($orphaned as $orphan) {
+						$orphan->deleteFromStage($stage);
+					}
+				}
+			}
+		}
 		
 		return $this->processAll($filepath);
 	}

@@ -37,7 +37,19 @@ class Hierarchy extends DataExtension {
 	 * all children, regardless of this setting.
 	 */
 	private static $node_threshold_leaf = 250;
-	
+
+	/**
+	 * A list of classnames to exclude from display in the hierarchy.
+	 * Especially useful for big sets of pages like listings
+	 * If you use this, and still need the classes to be editable
+	 * then add a model admin for the class
+	 * Note: Does not filter subclasses (non-inheriting)
+	 *
+	 * @var array
+	 * @config
+	 */
+	private static $hide_from_hierarchy = array();
+
 	public function augmentSQL(SQLQuery &$query) {
 	}
 
@@ -619,9 +631,18 @@ class Hierarchy extends DataExtension {
 	 */
 	public function stageChildren($showAll = false) {
 		$baseClass = ClassInfo::baseDataClass($this->owner->class);
-		$staged = $baseClass::get()
-			->filter('ParentID', (int)$this->owner->ID)
-			->exclude('ID', (int)$this->owner->ID);
+		$hidden = $this->owner->config()->hide_from_hierarchy;
+		if (empty($hidden)) {
+			$staged = $baseClass::get()
+				->filter('ParentID', (int)$this->owner->ID)
+				->exclude('ID', (int)$this->owner->ID);
+		} else {
+			$staged = $baseClass::get()
+				->filter('ParentID', (int)$this->owner->ID)
+				->exclude('ClassName', $hidden)
+				->exclude('ID', (int)$this->owner->ID);
+		}
+
 		if (!$showAll && $this->owner->db('ShowInMenus')) {
 			$staged = $staged->filter('ShowInMenus', 1);
 		}
@@ -643,15 +664,26 @@ class Hierarchy extends DataExtension {
 		}
 
 		$baseClass = ClassInfo::baseDataClass($this->owner->class);
-		$children = $baseClass::get()
-			->filter('ParentID', (int)$this->owner->ID)
-			->exclude('ID', (int)$this->owner->ID)
-			->setDataQueryParam(array(
-				'Versioned.mode' => $onlyDeletedFromStage ? 'stage_unique' : 'stage',
-				'Versioned.stage' => 'Live'
-			));
-		
-		if(!$showAll) $children = $children->filter('ShowInMenus', 1);
+		$hidden = $this->owner->config()->hide_from_hierarchy;
+		if (empty($hidden)) {
+			$children = $baseClass::get()
+				->filter('ParentID', (int)$this->owner->ID)
+				->exclude('ID', (int)$this->owner->ID)
+				->setDataQueryParam(array(
+					'Versioned.mode' => $onlyDeletedFromStage ? 'stage_unique' : 'stage',
+					'Versioned.stage' => 'Live'
+				));
+		} else {
+			$children = $baseClass::get()
+				->filter('ParentID', (int)$this->owner->ID)
+				->exclude('ClassName', $hidden)
+				->exclude('ID', (int)$this->owner->ID)
+				->setDataQueryParam(array(
+					'Versioned.mode' => $onlyDeletedFromStage ? 'stage_unique' : 'stage',
+					'Versioned.stage' => 'Live'
+				));
+		}
+		if(!$showAll && $this->owner->db('ShowInMenus')) $children = $children->filter('ShowInMenus', 1);
 
 		return $children;
 	}
