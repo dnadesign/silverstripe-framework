@@ -159,7 +159,6 @@ class DataObject extends ViewableData implements DataObjectInterface, i18nEntity
 	public static $cache_has_own_table_field = array();
 	protected static $_cache_db = array();
 	protected static $_cache_get_one;
-	protected static $_cache_has_one;
 	protected static $_cache_get_class_ancestry;
 	protected static $_cache_composite_fields = array();
 	protected static $_cache_is_composite_field = array();
@@ -1418,32 +1417,26 @@ class DataObject extends ViewableData implements DataObjectInterface, i18nEntity
 		if(isset($this->components[$componentName])) {
 			return $this->components[$componentName];
 		}
-		
+
 		if($class = $this->has_one($componentName)) {
 			$joinField = $componentName . 'ID';
 			$joinID    = $this->getField($joinField);
 
-			if(isset(DataObject::$_cache_has_one[$class][$joinID])) {
-				$this->components[$componentName] = DataObject::$_cache_has_one[$class][$joinID];
-				return $this->components[$componentName];
-			}
-
 			if($joinID) {
-				$component = $this->model->$class->byID($joinID);
+				$component = DataObject::get_by_id($class, $joinID);
 			}
 
 			if(!isset($component) || !$component) {
 				$component = $this->model->$class->newObject();
 			}
-			DataObject::$_cache_has_one[$class][$joinID] = $component;
 		} elseif($class = $this->belongs_to($componentName)) {
 			$joinField = $this->getRemoteJoinField($componentName, 'belongs_to');
 			$joinID    = $this->ID;
-			
+
 			if($joinID) {
 				$component = DataObject::get_one($class, "\"$joinField\" = $joinID");
 			}
-			
+
 			if(!isset($component) || !$component) {
 				$component = $this->model->$class->newObject();
 				$component->$joinField = $this->ID;
@@ -1451,7 +1444,7 @@ class DataObject extends ViewableData implements DataObjectInterface, i18nEntity
 		} else {
 			throw new Exception("DataObject->getComponent(): Could not find component '$componentName'.");
 		}
-		
+
 		$this->components[$componentName] = $component;
 		return $component;
 	}
@@ -2922,10 +2915,10 @@ class DataObject extends ViewableData implements DataObjectInterface, i18nEntity
 			$cacheKey .= '-' . implode("-", $extra);
 		}
 		$cacheKey = md5($cacheKey);
-		
+
 		// Flush destroyed items out of the cache
-		if($cache && isset(DataObject::$_cache_get_one[$callerClass][$cacheKey]) 
-				&& DataObject::$_cache_get_one[$callerClass][$cacheKey] instanceof DataObject 
+		if($cache && isset(DataObject::$_cache_get_one[$callerClass][$cacheKey])
+				&& DataObject::$_cache_get_one[$callerClass][$cacheKey] instanceof DataObject
 				&& DataObject::$_cache_get_one[$callerClass][$cacheKey]->destroyed) {
 
 			DataObject::$_cache_get_one[$callerClass][$cacheKey] = false;
@@ -2936,9 +2929,6 @@ class DataObject extends ViewableData implements DataObjectInterface, i18nEntity
 
 			if($cache) {
 				DataObject::$_cache_get_one[$callerClass][$cacheKey] = $item;
-				if ($item instanceof DataObject) {
-					DataObject::$_cache_has_one[$callerClass][$item->ID] = $item;
-				}
 				if(!DataObject::$_cache_get_one[$callerClass][$cacheKey]) {
 					DataObject::$_cache_get_one[$callerClass][$cacheKey] = false;
 				}
@@ -2952,12 +2942,12 @@ class DataObject extends ViewableData implements DataObjectInterface, i18nEntity
 	 * Also clears any cached aggregate data.
 	 *
 	 * @param boolean $persistent When true will also clear persistent data stored in the Cache system.
-	 *                            When false will just clear session-local cached data 
+	 *                            When false will just clear session-local cached data
 	 * @return DataObject $this
 	 */
 	public function flushCache($persistent = true) {
 		if($persistent) Aggregate::flushCache($this->class);
-		
+
 		if($this->class == 'DataObject') {
 			DataObject::$_cache_get_one = array();
 			return $this;
@@ -2966,11 +2956,10 @@ class DataObject extends ViewableData implements DataObjectInterface, i18nEntity
 		$classes = ClassInfo::ancestry($this->class);
 		foreach($classes as $class) {
 			if(isset(DataObject::$_cache_get_one[$class])) unset(DataObject::$_cache_get_one[$class]);
-			if(isset(DataObject::$_cache_has_one[$class])) unset(DataObject::$_cache_has_one[$class]);
 		}
-		
+
 		$this->extend('flushCache');
-		
+
 		$this->components = array();
 		return $this;
 	}
@@ -2984,15 +2973,9 @@ class DataObject extends ViewableData implements DataObjectInterface, i18nEntity
 				if($item) $item->destroy();
 			}
 		}
-		if(DataObject::$_cache_has_one) foreach(DataObject::$_cache_has_one as $class => $items) {
-			if(is_array($items)) foreach($items as $item) {
-				if($item) $item->destroy();
-			}
-		}
 		DataObject::$_cache_get_one = array();
-		DataObject::$_cache_has_one = array();
 	}
-	
+
 	/**
 	 * Reset all global caches associated with DataObject.
 	 */
@@ -3001,7 +2984,6 @@ class DataObject extends ViewableData implements DataObjectInterface, i18nEntity
 		DataObject::$cache_has_own_table_field = array();
 		DataObject::$_cache_db = array();
 		DataObject::$_cache_get_one = array();
-		DataObject::$_cache_has_one = array();
 		DataObject::$_cache_composite_fields = array();
 		DataObject::$_cache_is_composite_field = array();
 		DataObject::$_cache_custom_database_fields = array();
