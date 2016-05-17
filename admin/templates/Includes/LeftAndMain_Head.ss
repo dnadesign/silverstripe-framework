@@ -1,0 +1,1 @@
+<%-- ovveride this template in your app to include additional Head in the CMS, such as favicons --%>

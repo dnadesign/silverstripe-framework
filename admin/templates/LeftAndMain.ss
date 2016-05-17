@@ -5,12 +5,14 @@
 	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=720, maximum-scale=1.0" />
 	<title>$Title</title>
+	<% include LeftAndMain_Head %>
+
 </head>
 <body class="loading cms" lang="$Locale.RFC1766" data-frameworkpath="$ModulePath(framework)"
 	data-member-tempid="$CurrentMember.TempIDHash.ATT"
 >
 	<% include CMSLoadingScreen %>
-	
+
 	<div class="cms-container center" data-layout-type="custom">
 		$Menu
 		$Content
@@ -27,7 +29,7 @@
 			<div class="cms-content-controls cms-preview-controls south"></div>
 		</div>
 	</div>
-	
+
 	$EditorToolbar
 </body>
 </html>
