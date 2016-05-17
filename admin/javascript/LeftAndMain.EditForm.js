@@ -360,6 +360,7 @@
 					if(scrollY > $(window).height() / 2){
 						self.find('.cms-content-fields').scrollTop(scrollY);
 					}
+*/
 
 				} else {
 					// If session storage is not supported or there is nothing stored yet, focus on the first input
