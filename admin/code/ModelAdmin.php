@@ -221,7 +221,17 @@ abstract class ModelAdmin extends LeftAndMain {
 
 		return $list;
 	}
-
+	
+	/**
+	 * Returns current models config and checks if we're showing filters or not in admin
+	 * @return boolean
+	 */
+	public function getDisplayFilters() {
+		$model = $this->sanitiseClassName($this->modelClass);
+		$config = Config::inst()->get($model, "show_filters");
+		if ($config) return $config;
+		return false;
+	}
 
 	/**
 	 * Returns managed models' create, search, and import forms
